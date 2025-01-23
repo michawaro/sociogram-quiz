@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Quiz Sociométrique</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+      body {
+        font-family: "Segoe UI", system-ui, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+
+      .quiz-container {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        color: #333;
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .section {
+        margin-bottom: 30px;
+        padding: 20px;
+        border-radius: 8px;
+        background: #f9f9f9;
+      }
+
+      .section-positive {
+        border-left: 4px solid #4caf50;
+      }
+
+      .section-negative {
+        border-left: 4px solid #f44336;
+      }
+
+      .selection-group {
+        margin: 15px 0;
+      }
+
+      select {
+        width: 100%;
+        padding: 10px;
+        margin: 5px 0;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+        background: white;
+      }
+
+      select:focus {
+        outline: none;
+        border-color: #4caf50;
+        box-shadow: 0 0 5px rgba(76, 175, 80, 0.2);
+      }
+
+      button {
+        display: block;
+        width: 100%;
+        padding: 12px;
+        background: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        cursor: pointer;
+        margin-top: 20px;
+      }
+
+      button:hover {
+        background: #45a049;
+      }
+
+      .error {
+        color: #f44336;
+        margin: 10px 0;
+        font-size: 14px;
+      }
+
+      .success {
+        color: #4caf50;
+        margin: 10px 0;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="quiz-container">
+      <h1>Quiz de Collaboration</h1>
+
+      <!-- Identification -->
+      <div class="section">
+        <h2>Identification</h2>
+        <select id="studentSelect" required>
+          <option value="">Sélectionnez votre nom</option>
+        </select>
+      </div>
+
+      <!-- Choix positifs -->
+      <div class="section section-positive">
+        <h2>Avec qui préférez-vous travailler ?</h2>
+        <p>
+          Choisissez jusqu'à 3 élèves avec lesquels vous pourriez travailler
+          efficacement :
+        </p>
+        <div class="selection-group">
+          <select id="positive1" class="positive-select">
+            <option value="">Choisir un élève</option>
+          </select>
+          <select id="positive2" class="positive-select">
+            <option value="">Choisir un élève</option>
+          </select>
+          <select id="positive3" class="positive-select">
+            <option value="">Choisir un élève</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Choix négatifs -->
+      <div class="section section-negative">
+        <h2>Avec qui préférez-vous éviter de travailler ?</h2>
+        <p>
+          Choisissez jusqu'à 3 élèves avec lesquels la collaboration pourrait
+          être plus difficile :
+        </p>
+        <div class="selection-group">
+          <select id="negative1" class="negative-select">
+            <option value="">Choisir un élève</option>
+          </select>
+          <select id="negative2" class="negative-select">
+            <option value="">Choisir un élève</option>
+          </select>
+          <select id="negative3" class="negative-select">
+            <option value="">Choisir un élève</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="message"></div>
+      <button onclick="submitQuiz()">Valider mes choix</button>
+    </div>
+
+    <script>
+      // Initialisation de Supabase
+      const SUPABASE_URL = "https://ldqprgsocmttmwjpugzb.supabase.co";
+      const SUPABASE_KEY =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkcXByZ3NvY210dG13anB1Z3piIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE3NzMxMjYsImV4cCI6MjA0NzM0OTEyNn0.hRXtHOs7PdvRrZ-5AAnlSzCNwzi_CgsB44zsS8f7ag4";
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+      // Récupérer l'ID de la classe depuis l'URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const classId = urlParams.get("classId");
+
+      let students = [];
+
+      // Charger la liste des élèves au chargement de la page
+      async function loadStudents() {
+        try {
+          const { data, error } = await supabase
+            .from("classrooms")
+            .select("tabledata")
+            .eq("id", classId)
+            .single();
+
+          if (error) throw error;
+
+          students = data.tabledata.map((student, index) => ({
+            id: index + 1,
+            lastName: student.lastName,
+            firstName: student.firstName,
+            displayName: `${index + 1} - ${student.lastName} ${
+              student.firstName
+            }`,
+          }));
+
+          populateSelects();
+        } catch (error) {
+          console.error("Erreur lors du chargement des élèves:", error);
+          showMessage("Erreur lors du chargement des élèves", "error");
+        }
+      }
+
+      // Peupler tous les menus déroulants
+      function populateSelects() {
+        const selects = document.querySelectorAll("select");
+        selects.forEach((select) => {
+          // Garder la première option "Choisir un élève"
+          const defaultOption = select.options[0];
+          select.innerHTML = "";
+          select.appendChild(defaultOption);
+
+          students.forEach((student) => {
+            const option = document.createElement("option");
+            option.value = student.id;
+            option.textContent = student.displayName;
+            select.appendChild(option);
+          });
+        });
+      }
+
+      // Valider les choix
+      function validateChoices() {
+        const selectedStudent = document.getElementById("studentSelect").value;
+        if (!selectedStudent) {
+          showMessage("Veuillez vous identifier", "error");
+          return false;
+        }
+
+        // Vérifier les doublons et l'auto-sélection
+        const positiveChoices = Array.from(
+          document.querySelectorAll(".positive-select")
+        )
+          .map((select) => select.value)
+          .filter((value) => value !== "");
+
+        const negativeChoices = Array.from(
+          document.querySelectorAll(".negative-select")
+        )
+          .map((select) => select.value)
+          .filter((value) => value !== "");
+
+        // Vérifier l'auto-sélection
+        if (
+          [...positiveChoices, ...negativeChoices].includes(selectedStudent)
+        ) {
+          showMessage(
+            "Vous ne pouvez pas vous sélectionner vous-même",
+            "error"
+          );
+          return false;
+        }
+
+        // Vérifier les doublons
+        const allChoices = [...positiveChoices, ...negativeChoices];
+        if (new Set(allChoices).size !== allChoices.length) {
+          showMessage(
+            "Vous ne pouvez pas sélectionner le même élève plusieurs fois",
+            "error"
+          );
+          return false;
+        }
+
+        return true;
+      }
+
+      // Soumettre le quiz
+      async function submitQuiz() {
+        if (!validateChoices()) return;
+
+        const selectedStudent = document.getElementById("studentSelect").value;
+        const positiveChoices = Array.from(
+          document.querySelectorAll(".positive-select")
+        )
+          .map((select) => select.value)
+          .filter((value) => value !== "");
+        const negativeChoices = Array.from(
+          document.querySelectorAll(".negative-select")
+        )
+          .map((select) => select.value)
+          .filter((value) => value !== "");
+
+        try {
+          const { error } = await supabase.from("sociogram_results").insert([
+            {
+              class_id: classId,
+              student_id: selectedStudent,
+              positive_choices: positiveChoices,
+              negative_choices: negativeChoices,
+              timestamp: new Date(),
+            },
+          ]);
+
+          if (error) throw error;
+
+          showMessage("Vos choix ont été enregistrés avec succès !", "success");
+          // Désactiver le formulaire après soumission
+          document
+            .querySelectorAll("select, button")
+            .forEach((el) => (el.disabled = true));
+        } catch (error) {
+          console.error("Erreur lors de l'enregistrement:", error);
+          showMessage("Erreur lors de l'enregistrement de vos choix", "error");
+        }
+      }
+
+      // Afficher les messages
+      function showMessage(message, type) {
+        const messageDiv = document.getElementById("message");
+        messageDiv.textContent = message;
+        messageDiv.className = type;
+      }
+
+      // Charger les élèves au démarrage
+      document.addEventListener("DOMContentLoaded", loadStudents);
+
+      async function checkAccess() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const classId = urlParams.get("classId");
+
+        // Vérifier que l'ID de classe existe
+        if (!classId) {
+          alert("Accès non autorisé");
+          window.close();
+          return;
+        }
+
+        // Vérifier que la classe existe dans Supabase
+        const { data, error } = await supabase
+          .from("classrooms")
+          .select("id")
+          .eq("id", classId)
+          .single();
+
+        if (error || !data) {
+          alert("Classe non trouvée");
+          window.close();
+          return;
+        }
+      }
+
+      // Appeler au chargement
+      document.addEventListener("DOMContentLoaded", checkAccess);
+    </script>
+  </body>
+</html>
