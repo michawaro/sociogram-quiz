@@ -324,16 +324,16 @@
 
       // Partager lien
     function shareQuizLink() {
-      // Récupérer les données des élèves actuellement chargés dans le quiz
-      const studentData = students.map(s => ({
-        id: s.id,
-        name: `${s.lastName} ${s.firstName}`
-      }));
-    
-      // Encoder les données
-      const encodedData = btoa(JSON.stringify(studentData));
+      // Récupérer le paramètre 'students' de l'URL actuelle
+      const urlParams = new URLSearchParams(window.location.search);
+      const encodedData = urlParams.get('students');
       
-      // Construire l'URL avec les données
+      if (!encodedData) {
+        alert('Erreur : données des élèves non trouvées');
+        return;
+      }
+      
+      // Construire l'URL avec les mêmes données
       const shortUrl = `${window.location.origin}${window.location.pathname}?students=${encodedData}`;
       
       // Copier dans le presse-papier
