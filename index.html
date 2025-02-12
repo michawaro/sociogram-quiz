@@ -171,18 +171,21 @@ async function loadStudents() {
     const decodedData = JSON.parse(atob(encodedData));
     console.log("Données décodées:", decodedData); // Debug
 
-    // Extraire classId et la liste des étudiants
-    const { students: studentList, classId } = decodedData;
+    // Extraire la liste des étudiants et le classId
+    const studentList = decodedData.students;
+    const classId = decodedData.classId;
     
     // Sauvegarder le classId pour une utilisation ultérieure
     localStorage.setItem('currentClassId', classId);
 
-    // Créer le tableau d'étudiants à partir de la liste
-    students = studentList.split(',').map((name, index) => ({
-      id: index + 1,
-      name: name.trim(),
-      displayName: `${index + 1} - ${name.trim()}`,
-    }));
+    // Créer le tableau d'étudiants en nettoyant les données
+    students = studentList
+      .split(',')
+      .map((name, index) => ({
+        id: index + 1,
+        name: name.trim(),
+        displayName: `${index + 1} - ${name.trim()}`
+      }));
 
     console.log("Tableau final des étudiants:", students); // Debug
     
