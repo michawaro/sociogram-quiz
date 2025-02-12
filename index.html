@@ -163,32 +163,33 @@ async function loadStudents() {
     const urlParams = new URLSearchParams(window.location.search);
     const encodedData = urlParams.get('d');
     
+    console.log("Données encodées reçues:", encodedData);
+    
     if (!encodedData) {
       throw new Error("Données manquantes dans l'URL");
     }
 
-    // Décoder les données et créer le tableau d'étudiants
-    const studentList = atob(encodedData).split(',');
-    console.log("Liste des élèves décodée:", studentList); // Debug
+    // Décoder et afficher les données brutes
+    const decodedData = atob(encodedData);
+    console.log("Données décodées:", decodedData);
 
-    students = studentList.map((fullName, index) => {
-      // Nettoyer le nom (enlever les espaces inutiles)
-      const cleanName = fullName.trim();
-      
-      return {
-        id: index + 1,
-        lastName: cleanName, // On garde le nom complet
-        firstName: "", // On laisse vide car on a déjà le nom complet
-        displayName: `${index + 1} - ${cleanName}`,
-      };
-    });
+    // Créer le tableau d'étudiants
+    const studentList = decodedData.split(',');
+    console.log("Liste des élèves:", studentList);
 
-    console.log("Tableau students créé:", students); // Debug
+    students = studentList.map((name, index) => ({
+      id: index + 1,
+      displayName: `${index + 1} - ${name}`,
+    }));
+
+    console.log("Tableau final des étudiants:", students);
+    
     populateSelects();
   } catch (error) {
-    console.error("Erreur lors du chargement des élèves:", error);
-    showMessage("Erreur lors du chargement des élèves", "error");
+    console.error("Erreur complète:", error);
+    showMessage(`Erreur: ${error.message}`, "error");
   }
+}
       // Peupler tous les menus déroulants
       function populateSelects() {
         const selects = document.querySelectorAll("select");
