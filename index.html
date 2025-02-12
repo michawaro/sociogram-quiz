@@ -154,10 +154,6 @@
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkcXByZ3NvY210dG13anB1Z3piIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE3NzMxMjYsImV4cCI6MjA0NzM0OTEyNn0.hRXtHOs7PdvRrZ-5AAnlSzCNwzi_CgsB44zsS8f7ag4";
       const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-      // Récupérer l'ID de la classe depuis l'URL
-      const urlParams = new URLSearchParams(window.location.search);
-      const classId = urlParams.get("classId");
-
       let students = [];
 
       // Charger la liste des élèves au chargement de la page
@@ -268,33 +264,31 @@
       }
 
       // Soumettre le quiz
-      async function submitQuiz() {
-        if (!validateChoices()) return;
+async function submitQuiz() {
+  if (!validateChoices()) return;
 
-        const selectedStudent = document.getElementById("studentSelect").value;
-        const positiveChoices = Array.from(
-          document.querySelectorAll(".positive-select")
-        )
-          .map((select) => select.value)
-          .filter((value) => value !== "");
-        const negativeChoices = Array.from(
-          document.querySelectorAll(".negative-select")
-        )
-          .map((select) => select.value)
-          .filter((value) => value !== "");
+  const selectedStudent = document.getElementById("studentSelect").value;
+  const positiveChoices = Array.from(document.querySelectorAll(".positive-select"))
+    .map((select) => select.value)
+    .filter((value) => value !== "");
+  const negativeChoices = Array.from(document.querySelectorAll(".negative-select"))
+    .map((select) => select.value)
+    .filter((value) => value !== "");
 
-        try {
-          const { error } = await supabase.from("sociogram_results").insert([
-            {
-              class_id: classId,
-              student_id: selectedStudent,
-              positive_choices: positiveChoices,
-              negative_choices: negativeChoices,
-              timestamp: new Date(),
-            },
-          ]);
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const encodedData = urlParams.get("d");
+    
+    const { error } = await supabase.from("sociogram_results").insert([
+      {
+        student_id: selectedStudent,
+        positive_choices: positiveChoices,
+        negative_choices: negativeChoices,
+        timestamp: new Date(),
+      },
+    ]);
 
-          if (error) throw error;
+    if (error) throw error;
 
           showMessage("Vos choix ont été enregistrés avec succès !", "success");
           // Désactiver le formulaire après soumission
@@ -317,32 +311,6 @@
       // Charger les élèves au démarrage
       document.addEventListener("DOMContentLoaded", loadStudents);
 
-async function checkAccess() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const encodedData = urlParams.get("d");
-  
-  // Vérifier que les données sont présentes
-  if (!encodedData) {
-    alert("Accès non autorisé - Données manquantes");
-    window.close();
-    return;
-  }
-
-  try {
-    // Vérifier que les données sont valides
-    const studentList = atob(encodedData);
-    if (!studentList) {
-      throw new Error("Données invalides");
-    }
-  } catch (error) {
-    alert("Accès non autorisé - Données invalides");
-    window.close();
-    return;
-  }
-}
-
-      // Appeler au chargement
-      document.addEventListener("DOMContentLoaded", checkAccess);
     </script>
   </body>
 </html>
