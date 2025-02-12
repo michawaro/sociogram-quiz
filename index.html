@@ -323,30 +323,34 @@
       }
 
       // Partager lien
-      function shareQuizLink() {
-        // Récupérer uniquement le classId de l'URL actuelle
-        const urlParams = new URLSearchParams(window.location.search);
-        const classId = urlParams.get('classId');
-        
-        // Générer l'URL courte
-        const shortUrl = `https://michawaro.github.io/sociogram-quiz?classId=${classId}`;
-        
-        // Copier dans le presse-papier
-        navigator.clipboard.writeText(shortUrl)
-          .then(() => {
-            alert('Lien simplifié du quiz copié ! Vous pouvez maintenant le partager.');
-          })
-          .catch(err => {
-            // Fallback pour les navigateurs qui ne supportent pas l'API clipboard
-            const tempInput = document.createElement('input');
-            tempInput.value = shortUrl;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand('copy');
-            document.body.removeChild(tempInput);
-            alert('Lien simplifié du quiz copié ! Vous pouvez maintenant le partager.');
-          });
-      }
+    function shareQuizLink() {
+      // Récupérer les données des élèves actuellement chargés dans le quiz
+      const studentData = students.map(s => ({
+        id: s.id,
+        name: `${s.lastName} ${s.firstName}`
+      }));
+    
+      // Encoder les données
+      const encodedData = btoa(JSON.stringify(studentData));
+      
+      // Construire l'URL avec les données
+      const shortUrl = `${window.location.origin}${window.location.pathname}?students=${encodedData}`;
+      
+      // Copier dans le presse-papier
+      navigator.clipboard.writeText(shortUrl)
+        .then(() => {
+          alert('Lien du quiz copié ! Vous pouvez maintenant le partager.');
+        })
+        .catch(err => {
+          const tempInput = document.createElement('input');
+          tempInput.value = shortUrl;
+          document.body.appendChild(tempInput);
+          tempInput.select();
+          document.execCommand('copy');
+          document.body.removeChild(tempInput);
+          alert('Lien du quiz copié ! Vous pouvez maintenant le partager.');
+        });
+    }
       
       // Afficher les messages
       function showMessage(message, type) {
