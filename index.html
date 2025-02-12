@@ -157,9 +157,9 @@
       let students = [];
 
       // Charger la liste des élèves au chargement de la page
+
 async function loadStudents() {
   try {
-    // Vérifier les données dans l'URL
     const urlParams = new URLSearchParams(window.location.search);
     const encodedData = urlParams.get('d');
     
@@ -167,24 +167,28 @@ async function loadStudents() {
       throw new Error("Données manquantes dans l'URL");
     }
 
-    // Décoder les données
+    // Décoder les données et créer le tableau d'étudiants
     const studentList = atob(encodedData).split(',');
-    
-    // Créer le tableau d'étudiants
-    students = studentList.map((name, index) => {
+    console.log("Liste des élèves décodée:", studentList); // Debug
+
+    students = studentList.map((fullName, index) => {
+      // Nettoyer le nom (enlever les espaces inutiles)
+      const cleanName = fullName.trim();
+      
       return {
         id: index + 1,
-        name: name,
-        displayName: `${index + 1} - ${name}`,
+        lastName: cleanName, // On garde le nom complet
+        firstName: "", // On laisse vide car on a déjà le nom complet
+        displayName: `${index + 1} - ${cleanName}`,
       };
     });
 
+    console.log("Tableau students créé:", students); // Debug
     populateSelects();
   } catch (error) {
     console.error("Erreur lors du chargement des élèves:", error);
     showMessage("Erreur lors du chargement des élèves", "error");
   }
-}
       // Peupler tous les menus déroulants
       function populateSelects() {
         const selects = document.querySelectorAll("select");
