@@ -163,26 +163,28 @@ async function loadStudents() {
     const urlParams = new URLSearchParams(window.location.search);
     const encodedData = urlParams.get('d');
     
-    console.log("Données encodées reçues:", encodedData);
-    
     if (!encodedData) {
       throw new Error("Données manquantes dans l'URL");
     }
 
-    // Décoder et afficher les données brutes
-    const decodedData = atob(encodedData);
-    console.log("Données décodées:", decodedData);
+    // Décoder les données JSON
+    const decodedData = JSON.parse(atob(encodedData));
+    console.log("Données décodées:", decodedData); // Debug
 
-    // Créer le tableau d'étudiants
-    const studentList = decodedData.split(',');
-    console.log("Liste des élèves:", studentList);
+    // Extraire classId et la liste des étudiants
+    const { students: studentList, classId } = decodedData;
+    
+    // Sauvegarder le classId pour une utilisation ultérieure
+    localStorage.setItem('currentClassId', classId);
 
-    students = studentList.map((name, index) => ({
+    // Créer le tableau d'étudiants à partir de la liste
+    students = studentList.split(',').map((name, index) => ({
       id: index + 1,
-      displayName: `${index + 1} - ${name}`,
+      name: name.trim(),
+      displayName: `${index + 1} - ${name.trim()}`,
     }));
 
-    console.log("Tableau final des étudiants:", students);
+    console.log("Tableau final des étudiants:", students); // Debug
     
     populateSelects();
   } catch (error) {
@@ -266,11 +268,11 @@ async function submitQuiz() {
     .filter((value) => value !== "");
 
   try {
-    const urlParams = new URLSearchParams(window.location.search);
-    const encodedData = urlParams.get("d");
+    const classId = localStorage.getItem('currentClassId');
     
     const { error } = await supabase.from("sociogram_results").insert([
       {
+        class_id: classId,
         student_id: selectedStudent,
         positive_choices: positiveChoices,
         negative_choices: negativeChoices,
@@ -280,16 +282,14 @@ async function submitQuiz() {
 
     if (error) throw error;
 
-          showMessage("Vos choix ont été enregistrés avec succès !", "success");
-          // Désactiver le formulaire après soumission
-          document
-            .querySelectorAll("select, button")
-            .forEach((el) => (el.disabled = true));
-        } catch (error) {
-          console.error("Erreur lors de l'enregistrement:", error);
-          showMessage("Erreur lors de l'enregistrement de vos choix", "error");
-        }
-      }
+    showMessage("Vos choix ont été enregistrés avec succès !", "success");
+    document.querySelectorAll("select, button")
+      .forEach((el) => (el.disabled = true));
+  } catch (error) {
+    console.error("Erreur lors de l'enregistrement:", error);
+    showMessage("Erreur lors de l'enregistrement de vos choix", "error");
+  }
+}
 
       // Afficher les messages
       function showMessage(message, type) {
