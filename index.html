@@ -317,30 +317,29 @@
       // Charger les élèves au démarrage
       document.addEventListener("DOMContentLoaded", loadStudents);
 
-      async function checkAccess() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const classId = urlParams.get("d");
+async function checkAccess() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const encodedData = urlParams.get("d");
+  
+  // Vérifier que les données sont présentes
+  if (!encodedData) {
+    alert("Accès non autorisé - Données manquantes");
+    window.close();
+    return;
+  }
 
-        // Vérifier que l'ID de classe existe
-        if (!classId) {
-          alert("Accès non autorisé");
-          window.close();
-          return;
-        }
-
-        // Vérifier que la classe existe dans Supabase
-        const { data, error } = await supabase
-          .from("classrooms")
-          .select("id")
-          .eq("id", classId)
-          .single();
-
-        if (error || !data) {
-          alert("Classe non trouvée");
-          window.close();
-          return;
-        }
-      }
+  try {
+    // Vérifier que les données sont valides
+    const studentList = atob(encodedData);
+    if (!studentList) {
+      throw new Error("Données invalides");
+    }
+  } catch (error) {
+    alert("Accès non autorisé - Données invalides");
+    window.close();
+    return;
+  }
+}
 
       // Appeler au chargement
       document.addEventListener("DOMContentLoaded", checkAccess);
