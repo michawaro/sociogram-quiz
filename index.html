@@ -161,31 +161,49 @@
       let students = [];
 
       // Charger la liste des élèves au chargement de la page
-      async function loadStudents() {
-        try {
-          const { data, error } = await supabase
-            .from("classrooms")
-            .select("tabledata")
-            .eq("id", classId)
-            .single();
-
-          if (error) throw error;
-
-          students = data.tabledata.map((student, index) => ({
+  async function loadStudents() {
+    try {
+      // Vérifier d'abord si les données sont dans l'URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const encodedData = urlParams.get('students');
+      
+      if (encodedData) {
+        // Utiliser les données de l'URL
+        const studentData = JSON.parse(atob(decodeURIComponent(encodedData)));
+        students = studentData.map((student, index) => {
+          // Séparer le nom complet en nom et prénom
+          const [lastName, firstName] = student.name.split(' ');
+          return {
             id: index + 1,
-            lastName: student.lastName,
-            firstName: student.firstName,
-            displayName: `${index + 1} - ${student.lastName} ${
-              student.firstName
-            }`,
-          }));
-
-          populateSelects();
-        } catch (error) {
-          console.error("Erreur lors du chargement des élèves:", error);
-          showMessage("Erreur lors du chargement des élèves", "error");
-        }
+            lastName: lastName,
+            firstName: firstName,
+            displayName: `${index + 1} - ${lastName} ${firstName}`,
+          };
+        });
+      } else {
+        // Utiliser Supabase si pas de données dans l'URL
+        const { data, error } = await supabase
+          .from("classrooms")
+          .select("tabledata")
+          .eq("id", classId)
+          .single();
+  
+        if (error) throw error;
+  
+        students = data.tabledata.map((student, index) => ({
+          id: index + 1,
+          lastName: student.lastName,
+          firstName: student.firstName,
+          displayName: `${index + 1} - ${student.lastName} ${student.firstName}`,
+        }));
       }
+  
+      populateSelects();
+    } catch (error) {
+      console.error("Erreur lors du chargement des élèves:", error);
+      showMessage("Erreur lors du chargement des élèves", "error");
+    }
+  }
 
       // Peupler tous les menus déroulants
       function populateSelects() {
