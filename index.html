@@ -89,6 +89,20 @@
         margin: 10px 0;
         font-size: 14px;
       }
+
+      .share-button {
+        padding: 8px 16px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      
+      .share-button:hover {
+        background-color: #45a049;
+      }
     </style>
   </head>
   <body>
@@ -145,6 +159,7 @@
 
       <div id="message"></div>
       <button onclick="submitQuiz()">Valider mes choix</button>
+      <button onclick="shareQuizLink()" class="share-button">Partager le quiz</button>
     </div>
 
     <script>
@@ -307,6 +322,32 @@
         }
       }
 
+      // Partager lien
+      function shareQuizLink() {
+        // Récupérer uniquement le classId de l'URL actuelle
+        const urlParams = new URLSearchParams(window.location.search);
+        const classId = urlParams.get('classId');
+        
+        // Générer l'URL courte
+        const shortUrl = `https://michawaro.github.io/sociogram-quiz?classId=${classId}`;
+        
+        // Copier dans le presse-papier
+        navigator.clipboard.writeText(shortUrl)
+          .then(() => {
+            alert('Lien simplifié du quiz copié ! Vous pouvez maintenant le partager.');
+          })
+          .catch(err => {
+            // Fallback pour les navigateurs qui ne supportent pas l'API clipboard
+            const tempInput = document.createElement('input');
+            tempInput.value = shortUrl;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            alert('Lien simplifié du quiz copié ! Vous pouvez maintenant le partager.');
+          });
+      }
+      
       // Afficher les messages
       function showMessage(message, type) {
         const messageDiv = document.getElementById("message");
