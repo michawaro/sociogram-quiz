@@ -89,20 +89,6 @@
         margin: 10px 0;
         font-size: 14px;
       }
-
-      .share-button {
-        padding: 8px 16px;
-        background-color: #4CAF50;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        margin: 5px;
-      }
-      
-      .share-button:hover {
-        background-color: #45a049;
-      }
     </style>
   </head>
   <body>
@@ -159,7 +145,6 @@
 
       <div id="message"></div>
       <button onclick="submitQuiz()">Valider mes choix</button>
-      <button onclick="shareQuizLink()" class="share-button">Partager le quiz</button>
     </div>
 
     <script>
@@ -322,36 +307,6 @@
         }
       }
 
-      // Partager lien
-    function shareQuizLink() {
-      // Récupérer le paramètre 'students' de l'URL actuelle
-      const urlParams = new URLSearchParams(window.location.search);
-      const encodedData = urlParams.get('students');
-      
-      if (!encodedData) {
-        alert('Erreur : données des élèves non trouvées');
-        return;
-      }
-      
-      // Construire l'URL avec les mêmes données
-      const shortUrl = `${window.location.origin}${window.location.pathname}?students=${encodedData}`;
-      
-      // Copier dans le presse-papier
-      navigator.clipboard.writeText(shortUrl)
-        .then(() => {
-          alert('Lien du quiz copié ! Vous pouvez maintenant le partager.');
-        })
-        .catch(err => {
-          const tempInput = document.createElement('input');
-          tempInput.value = shortUrl;
-          document.body.appendChild(tempInput);
-          tempInput.select();
-          document.execCommand('copy');
-          document.body.removeChild(tempInput);
-          alert('Lien du quiz copié ! Vous pouvez maintenant le partager.');
-        });
-    }
-      
       // Afficher les messages
       function showMessage(message, type) {
         const messageDiv = document.getElementById("message");
